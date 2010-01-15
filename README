@@ -1,0 +1,44 @@
+DOCDB is a minimalist approach to a document oriented database using REDIS as backend.
+It works more to show NoSQL patterns than for real life use.
+Most of this are musings about information retrieval techniques over a document database...
+There is a small prototype of a HTTP based document db in python and a script to help understand the variation and distribution of words in distinct books.
+Look in books/ folder to download the example books, and run doc_to_sets.py passing them as arguments. 
+The number of sets dont grow too much after the 4 books, and it tends to stop growing after a lot of data was fed.
+
+The same idea is applied on docdb:
+
+Assume a document DOC, which has N words. A HTTP POST to docdb would work as:
+
+_id = INCR NEXT.DOC
+SET DOCID:_id DOC
+SET DOCMETA:_id DOC's metadata (name, tstamp, revision)
+acc=0
+for i in DOC.split():
+        if i in stopwords: 
+                break
+        word = stem(i)
+        SET ADD set_word _id
+        acc++
+
+{_id, acc}
+
+and yield the following response:
+
+{_id:1, wordcount:""}
+
+Generate a unique ID for DOC.
+For each word in DOC that isn't a stop word, get its stem and add the generated id to a SET with it.
+
+
+To find documents containing a list of words, the search would be the intersection of all ids found inside these SETs
+
+find([a, b, c]):
+        return intersect(set_a, set_b, set_c)
+
+
+Future ideas:
+Revisions could be achieved with lists
+LSET DOCREV:_id with latest revision 
+They could be diffs agains the original version, or a namespace could be introduced to group them (as in a SET):
+SET_DOC_VERSIONS:_id
+
